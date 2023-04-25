@@ -20,7 +20,17 @@ def prepare():
         else:
             print("Could not establish LAN connection")
         disconnect()
-        time.sleep(30)
+        time.sleep(settings.sensor_read_period_s)
+
+_sync_time_count = 0
+def sync_time():
+    global _sync_time_count
+    if _sync_time_count >= settings.sync_time_period:
+        if set_rtc_from_ntp_time():
+            _sync_time_count = 0
+            return
+    _sync_time_count += 1
+
 
 def read_sensor():
 
@@ -50,25 +60,36 @@ _records = []
 
 def upload_records(records):
 
-    _records.extend(records)
-
     dimensions = [ {'Name': 'location', 'Value': settings.sensor_location} ]
     commonAttributes = {
             'Dimensions': dimensions,
             'MeasureValueType': 'DOUBLE',
             'TimeUnit' : 'SECONDS'        
             }
-    response = WriteRecords( "WeatherDb", "Weather", _records, commonAttributes )    
+    response = WriteRecords( "WeatherDb", "Weather", records, commonAttributes )    
     if response != None:
         try:
             total = json.loads(response.text)["RecordsIngested"]["Total"]
-            print(f'Uploaded {total} records of {len(_records)}.')
-            if total == len(_records):
-                _records.clear()
+            print(f'Uploaded {total} records of {len(records)}.')
+            if total == len(records):
+                records.clear()
                 return
         except AttributeError:
             pass
     print("Upload failed.")
+
+def get_seconds_until_next_reading():
+    current_seconds = time.gmtime()[5]
+    return 30 - (current_seconds % 30)
+
+def sleep_until_next_reading():
+    seconds_to_sleep = get_seconds_until_next_reading()
+    if seconds_to_sleep > 0:
+        print(f'Sleeping for {seconds_to_sleep} seconds...')
+        time.sleep(seconds_to_sleep)
+
+def deep_sleep_until_next_reading():
+    sleep_until_next_reading()
 
 # Two modes - normal, has display attached
 #           - low power, no display upload only
@@ -88,9 +109,21 @@ def upload_records(records):
 
 
 prepare()
-while(True):
+sleep_until_next_reading()
+_loop = 2
+while(_loop > 0):
     records = read_sensor()
-    upload_records(records)
-    break
+    _records.extend(records)
+    if connect():
+        sync_time()
+        upload_records(_records)
+    if settings.has_display:
+        sleep_until_next_reading()
+    else:
+        disconnect()
+        deep_sleep_until_next_reading()
+    _loop -= 1
 
 disconnect()
+
+
