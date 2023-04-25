@@ -1,5 +1,5 @@
-from connection import *
-from ntptime import *
+import connection
+import ntptime
 import machine
 import settings
 import urequests # handles making and servicing network requests
@@ -7,26 +7,29 @@ import time
 from timestream import *
 
 def prepare():
+    """ Establish a connection and update the RTC from an NTP server.
+        Will retry until successful. 
+    """ 
     while(True):
-        if connect():
+        if connection.connect():
             print("LAN connection established")
-            if set_rtc_from_ntp_time():
-                print("time has been set from ntp time server")
+            if ntptime.set_rtc_from_ntp_time():
                 rtc = machine.RTC()
-                print(rtc.datetime())
+                tm = rtc.datetime()
+                print(f"UTC Time {tm[3]:02d}:{tm[4]:02d}:{tm[5]:02d} {tm[2]:02d}-{tm[1]:02d}-{tm[0]} has been set from ntp time server")
                 return
             else:
                 print("time could not be read from ntp time server")
         else:
             print("Could not establish LAN connection")
-        disconnect()
+        connection.disconnect()
         time.sleep(settings.sensor_read_period_s)
 
 _sync_time_count = 0
 def sync_time():
     global _sync_time_count
     if _sync_time_count >= settings.sync_time_period:
-        if set_rtc_from_ntp_time():
+        if ntptime.set_rtc_from_ntp_time():
             _sync_time_count = 0
             return
     _sync_time_count += 1
@@ -60,11 +63,12 @@ _records = []
 
 def upload_records(records):
 
-    dimensions = [ {'Name': 'location', 'Value': settings.sensor_location} ]
+    dimensions = [ {'Name': 'location', 'Value': settings.sensor_location},
+                   {'Name': 'timezone-offset', 'Value': f'{ntptime.get_timezone_offset()}'} ]
     commonAttributes = {
             'Dimensions': dimensions,
             'MeasureValueType': 'DOUBLE',
-            'TimeUnit' : 'SECONDS'        
+            'TimeUnit' : 'SECONDS'
             }
     response = WriteRecords( "WeatherDb", "Weather", records, commonAttributes )    
     if response != None:
@@ -74,27 +78,35 @@ def upload_records(records):
             if total == len(records):
                 records.clear()
                 return
-        except AttributeError:
-            pass
+        except KeyError:
+            print(response.text)
     print("Upload failed.")
 
 def get_seconds_until_next_reading():
+    """ Return the number of seconds until the next sensor reading should be taken. 
+    """
     current_seconds = time.gmtime()[5]
-    return 30 - (current_seconds % 30)
+    return settings.sensor_read_period_s - (current_seconds % settings.sensor_read_period_s)
 
 def sleep_until_next_reading():
+    """ Sleep until the next sensor reading is ready to be taken.
+        All peripherals remain at full power. 
+    """
     seconds_to_sleep = get_seconds_until_next_reading()
     if seconds_to_sleep > 0:
         print(f'Sleeping for {seconds_to_sleep} seconds...')
         time.sleep(seconds_to_sleep)
 
 def deep_sleep_until_next_reading():
+    """ Enter a deep sleep until the next sensor reading is ready to be taken.
+        Used to conserve power between readings. The LAN should be disconnected
+        before calling this function. 
+    """
     sleep_until_next_reading()
 
 # Two modes - normal, has display attached
 #           - low power, no display upload only
 
-# Get NTP time and set RTC
 # Get the current time and wait until the next 30 second interval
 # Main Loop
 # while 1
@@ -108,22 +120,23 @@ def deep_sleep_until_next_reading():
 #   If low power mode - deep sleep until next 30 second interval, else normal sleep
 
 
+
 prepare()
 sleep_until_next_reading()
 _loop = 2
 while(_loop > 0):
     records = read_sensor()
     _records.extend(records)
-    if connect():
+    if connection.connect():
         sync_time()
         upload_records(_records)
     if settings.has_display:
         sleep_until_next_reading()
     else:
-        disconnect()
+        connection.disconnect()
         deep_sleep_until_next_reading()
     _loop -= 1
 
-disconnect()
+connection.disconnect()
 
 

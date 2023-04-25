@@ -1,6 +1,6 @@
 import time
 import network   # handles connecting to WiFi
-from settings import *
+import secrets
 
 # Connect to network
 _wlan = network.WLAN(network.STA_IF)
@@ -10,8 +10,8 @@ def connect():
         print('activating connection')
         _wlan.active(True)
     if not _wlan.isconnected():
-        print(f'Connecting to "{ssid}"')
-        _wlan.connect(ssid, password)
+        print(f'Connecting to "{secrets.wifi_ssid}"')
+        _wlan.connect(secrets.wifi_ssid, secrets.wifi_password)
         retries = 0
         while not _wlan.isconnected() and _wlan.status() >= 0 and retries < 20:
             retries += 1
