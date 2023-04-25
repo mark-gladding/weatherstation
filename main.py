@@ -1,10 +1,11 @@
 import connection
+import json
 import ntptime
 import machine
 import settings
-import urequests # handles making and servicing network requests
 import time
-from timestream import *
+import timestream
+import urequests
 
 def prepare():
     """ Establish a connection and update the RTC from an NTP server.
@@ -70,7 +71,7 @@ def upload_records(records):
             'MeasureValueType': 'DOUBLE',
             'TimeUnit' : 'SECONDS'
             }
-    response = WriteRecords( "WeatherDb", "Weather", records, commonAttributes )    
+    response = timestream.WriteRecords( "WeatherDb", "Weather", records, commonAttributes )    
     if response != None:
         try:
             total = json.loads(response.text)["RecordsIngested"]["Total"]

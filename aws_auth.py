@@ -3,9 +3,6 @@ import hmac
 import hashlib
 import time
 
-import urequests as requests
-
-
 def sign(key, msg):
     """
     Copied from https://docs.aws.amazon.com/general/latest/gr/sigv4-signed-request-examples.html
