@@ -1,7 +1,8 @@
 from connection import *
 from ntptime import *
-import urequests # handles making and servicing network requests
 import machine
+import urequests # handles making and servicing network requests
+import time
 from timestream import *
 
 # Two modes - normal, has display attached
@@ -30,11 +31,39 @@ if set_rtc_from_ntp_time():
 rtc = machine.RTC()
 print(rtc.datetime())
 
-print(GetHostCell('query'))
+current_time = f'{time.time()}'
 
-#print("1. Querying google.com:")
-#r = urequests.get("http://www.google.com")
-#print(r.content)
-#r.close()
+dimensions = [
+            {'Name': 'location', 'Value': 'office'}
+        ]
+
+temperature = {
+    'MeasureName': 'temperature',
+    'MeasureValue': '18.2'
+}
+
+pressure = {
+    'MeasureName': 'pressure',
+    'MeasureValue': '13.5'
+}
+
+humidity = {
+    'MeasureName': 'humidity',
+    'MeasureValue': '95.4'
+}
+
+records = [temperature, pressure, humidity]
+commonAttributes = {
+            'Dimensions': dimensions,
+            'MeasureValueType': 'DOUBLE',
+            'Time': current_time,
+            'TimeUnit' : 'SECONDS'
+        }
+response = WriteRecords( "WeatherDb", "Weather", records, commonAttributes )
+if response != None:
+    print(response.text)
+else:
+    print("WriteRecords failed")
+
 
 disconnect()
