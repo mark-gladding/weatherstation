@@ -2,6 +2,7 @@ import connection
 import json
 import ntptime
 import machine
+import sensor
 import settings
 import time
 import timestream
@@ -35,30 +36,6 @@ def sync_time():
             return
     _sync_time_count += 1
 
-
-def read_sensor():
-
-    current_time = f'{time.time()}'
-
-    temperature = {
-        'MeasureName': 'temperature',
-        'MeasureValue': '18.2',
-        'Time': current_time
-    }
-
-    pressure = {
-        'MeasureName': 'pressure',
-        'MeasureValue': '13.5',
-        'Time': current_time
-    }
-
-    humidity = {
-        'MeasureName': 'humidity',
-        'MeasureValue': '95.4',
-        'Time': current_time
-    }
-
-    return [temperature, pressure, humidity]
 
 _records = []
 
@@ -126,7 +103,7 @@ prepare()
 sleep_until_next_reading()
 _loop = 2
 while(_loop > 0):
-    records = read_sensor()
+    records = sensor.read_sensor()
     _records.extend(records)
     if connection.connect():
         sync_time()
