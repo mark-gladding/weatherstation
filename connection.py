@@ -1,11 +1,15 @@
 import time
-import network   # handles connecting to WiFi
+import network
 import secrets
 
-# Connect to network
-_wlan = network.WLAN(network.STA_IF)
+_wlan = None
 
 def connect():
+    global _wlan
+
+    if not _wlan:
+        _wlan = network.WLAN(network.STA_IF)
+
     if not _wlan.active():
         print('activating connection')
         _wlan.active(True)
@@ -20,6 +24,11 @@ def connect():
     return _wlan.isconnected()
 
 def disconnect():
+    global _wlan
+
+    if _wlan == None:
+        return
+
     if _wlan.isconnected():
         print('disconnecting connection')
         _wlan.disconnect()

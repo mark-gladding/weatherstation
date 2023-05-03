@@ -58,3 +58,9 @@ def set_rtc_from_ntp_time():
 def get_timezone_offset():
     return _timezone_offset
 
+def get_local_time_string(utc_time):
+
+    seconds_since_epoch = (int)(utc_time) + get_timezone_offset()
+    tm = time.gmtime(seconds_since_epoch)
+
+    return f'{tm[3] % 12:02d}:{tm[4]:02d}:{tm[5]:02d}'
