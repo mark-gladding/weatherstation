@@ -15,7 +15,6 @@ def prepare():
         Will retry until successful. 
     """ 
     while(True):
-        raise KeyError('Test exception')
         if connection.connect():
             print('LAN connection established')
             display.status('Connected')
