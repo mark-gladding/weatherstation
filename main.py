@@ -91,13 +91,13 @@ def upload_last_error():
 
 def draw_power():
     """ Generate a power draw to keep the attached power bank alive
-        by turning the WiFi off, on, connecting for a couple of seconds and turning it back off.
+        by turning the WiFi off, on, connecting for a second and turning it back off.
     """
 
     display.status('Power pulse.')
     connection.disconnect()
     connection.connect()
-    time.sleep(2)
+    time.sleep(1)
     connection.disconnect()
 
 def get_seconds_until_next_reading():
@@ -164,11 +164,13 @@ try:
     upload_last_error()
     # Do an initial read and display (if attached)
     current_time, tempC, pres_hPa, humRH = sensor.read_sensor()
-    display.update_readings(ntptime.get_local_time_string(current_time), tempC, pres_hPa, humRH)
+    display.update_readings(ntptime.get_local_time_string(current_time), settings.sensor_location, tempC, pres_hPa, humRH)
+    if settings.remote_sensor_location:
+        print(timestream.read_remote_sensor(settings.database_name, settings.sensor_readings_table, settings.remote_sensor_location))
     deep_sleep_until_next_reading()
     while(True):
         current_time, tempC, pres_hPa, humRH = sensor.read_sensor()
-        display.update_readings(ntptime.get_local_time_string(current_time), tempC, pres_hPa, humRH)
+        display.update_readings(ntptime.get_local_time_string(current_time), settings.sensor_location, tempC, pres_hPa, humRH)
         readings = sensor.format_readings(current_time, tempC, pres_hPa, humRH)
         _readings.extend(readings)
         if connection.connect():

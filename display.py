@@ -48,15 +48,16 @@ def clear():
     _display.fill(0)
     _display.show()
 
-def update_readings(local_time_string, tempC, pres_hPa, humRH):
+def update_readings(local_time_string, sensor_location, tempC, pres_hPa, humRH):
     global _display
 
     if not _display:
         return
 
     _display.fill_rect(0, 0, 128, 56, 0)
-    _display.text(f'Time: {local_time_string}', 0, 0)
-    _display.text(f'Temp: {tempC:.1f}', 0, 8)
-    _display.text(f'Pres: {pres_hPa:.0f}', 0, 16)
-    _display.text(f'Humi: {humRH:.0f}', 0, 24)
+    _display.text(f'Locn: {sensor_location}', 0, 0)
+    _display.text(f'Time: {local_time_string}', 0, 8)
+    _display.text(f'Temp: {tempC:.1f}', 0, 16)
+    _display.text(f'Pres: {pres_hPa:.0f}', 0, 24)
+    _display.text(f'Humi: {humRH:.0f}', 0, 32)
     _display.show()
