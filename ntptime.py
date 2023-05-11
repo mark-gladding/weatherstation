@@ -62,5 +62,10 @@ def get_local_time_string(utc_time):
 
     seconds_since_epoch = (int)(utc_time) + get_timezone_offset()
     tm = time.gmtime(seconds_since_epoch)
+    hours_in_24_hour_format = tm[3]
+    hours_in_12_hour_format = hours_in_24_hour_format % 12
+    if hours_in_12_hour_format == 0:
+        hours_in_12_hour_format = 12
+    minutes = tm[4]
 
-    return f'{tm[3] % 12:02d}:{tm[4]:02d}:{tm[5]:02d}'
+    return f"{ hours_in_12_hour_format:02d}:{minutes:02d} {'PM' if hours_in_24_hour_format >= 12 else 'AM' }"

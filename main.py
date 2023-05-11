@@ -163,6 +163,7 @@ try:
     # Upload the last error message, if logged
     upload_last_error()
     # Do an initial read and display (if attached)
+    display.hide_status()
     current_time, tempC, pres_hPa, humRH = sensor.read_sensor()
     display.update_readings(ntptime.get_local_time_string(current_time), settings.sensor_location, tempC, pres_hPa, humRH)
     if settings.remote_sensor_location:
@@ -180,6 +181,7 @@ try:
 
 except Exception as e:
     log.write_last_error(e)
+    display.show_status()
     display.error(str(e))
     connection.disconnect()
     if settings.reboot_on_error:
