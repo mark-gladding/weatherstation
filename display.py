@@ -15,7 +15,7 @@ def init_display():
         print('Display not detected.')
         _display = None
     else:
-        packed_font.load_font('digits-32')
+        packed_font.load_font('digits-30')
         packed_font.load_font('text-16')
 
 def is_present():
@@ -89,8 +89,9 @@ def update_readings(local_time_string, sensor_location, tempC, pres_hPa, humRH):
 
     _display.fill_rect(0, 0, 128, 56, 0)
 
-    packed_font.select_font('digits-32')
-    packed_font.text(_display, f'{tempC:.1f}d', 0, 16, 128, 1)
+    packed_font.select_font('digits-30')
+    degrees = '\u00b0'
+    packed_font.text(_display, f'{tempC:.1f}{degrees}', 0, 16, 128, 1)
 
     packed_font.select_font('text-16')
     packed_font.text(_display, f'{local_time_string}', 0, 0, 128, 1)

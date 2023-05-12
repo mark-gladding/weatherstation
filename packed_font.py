@@ -14,7 +14,7 @@ def load_font(font_name):
             print(f'{font_name}.pf has an unknown file format')
             return
         font = {  'name' : font_name,
-                  'default_character' : header[2],
+                  'default_character' : chr(header[2]),
                   'character_count': header[3],
                   'characters' : {},
                   'data' : None           
