@@ -1,7 +1,6 @@
-from PiicoDev_SSD1306 import *
+from enhanced_display import Enhanced_Display
 import machine
 import time
-import packed_font
 
 _led = machine.Pin("LED", machine.Pin.OUT)
 _display = None
@@ -10,16 +9,15 @@ _show_status = True
 def init_display():
     global _display
 
-    _display = create_PiicoDev_SSD1306()
-    if _display.comms_err:
+    _display = Enhanced_Display()
+    if not _display.is_present:
         print('Display not detected.')
         _display = None
     else:
-        packed_font.load_font('digits-30')
-        packed_font.load_font('text-16')
+        _display.load_fonts(['digits-30','text-16'])
 
 def is_present():
-    return not _display == None 
+    return _display != None 
 
 def _flash_led():
     _led.on()
@@ -89,13 +87,13 @@ def update_readings(local_time_string, sensor_location, tempC, pres_hPa, humRH):
 
     _display.fill_rect(0, 0, 128, 56, 0)
 
-    packed_font.select_font('digits-30')
+    _display.select_font('digits-30')
     degrees = '\u00b0'
-    packed_font.text(_display, f'{tempC:.1f}{degrees}', 0, 16, 128, 1)
+    _display.text(f'{tempC:.1f}{degrees}', 0, 16, 1)
 
-    packed_font.select_font('text-16')
-    packed_font.text(_display, f'{local_time_string}', 0, 0, 128, 1)
-    packed_font.text(_display, f'{_title(sensor_location)}', 0, 48, 128, 1, 16, 2)
+    _display.select_font('text-16')
+    _display.text(f'{local_time_string}', 0, 0, 1)
+    _display.text(f'{_title(sensor_location)}', 0, 0, 1, 2)
 
     # _display.text(f'Locn: {sensor_location}', 0, 0)
     # _display.text(f'Time: {local_time_string}', 0, 8)
