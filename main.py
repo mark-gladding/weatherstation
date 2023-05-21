@@ -42,53 +42,6 @@ def sync_time():
 
 _readings = []
 
-def upload_readings(readings):
-
-    display.status(f'Upload {len(readings)} reads.')
-    dimensions = [ {'Name': 'location', 'Value': settings.sensor_location} ]
-    commonAttributes = {
-            'Dimensions': dimensions,
-            'MeasureValueType': 'DOUBLE',
-            'TimeUnit' : 'SECONDS'
-            }
-    response = timestream.write_records(settings.database_name, settings.sensor_readings_table, readings, commonAttributes )    
-    if response != None:
-        try:
-            total = json.loads(response.text)["RecordsIngested"]["Total"]
-            display.status(f'Uploaded {total} of {len(readings)}.')
-
-            if total == len(readings):
-                readings.clear()
-                return
-        except KeyError:
-            display.error(response.text)
-    display.error("Upload failed.")
-
-def upload_last_error():
-
-    last_error = log.read_last_error()
-    if not last_error:
-        return
-     
-    display.status(f'Upload log.')
-    dimensions = [ {'Name': 'location', 'Value': settings.sensor_location} ]
-    commonAttributes = {
-            'Dimensions': dimensions,
-            'MeasureValueType': 'VARCHAR',
-            'TimeUnit' : 'SECONDS'
-            }
-    response = timestream.write_records( settings.database_name, settings.device_log_table, last_error, commonAttributes )    
-    if response != None:
-        try:
-            total = json.loads(response.text)["RecordsIngested"]["Total"]
-            if total == len(last_error):
-                display.status(f'Upload successful.')
-                log.clear_last_error()
-                return
-        except KeyError:
-            display.error(response.text)
-    display.error("Upload failed.")    
-
 def draw_power():
     """ Generate a power draw to keep the attached power bank alive
         by turning the WiFi off, on, connecting for a second and turning it back off.
@@ -115,6 +68,12 @@ def get_seconds_until_next_power_draw():
     current_seconds = time.gmtime()[5]
     return settings.draw_power_period_s - (current_seconds % settings.draw_power_period_s)
 
+def wait_until_next_reading():
+    if settings.deep_sleep:
+        deep_sleep_until_next_reading()
+    else:
+        keep_awake_until_next_reading()
+
 def sleep_until_next_reading():
     """ Sleep until the next sensor reading is ready to be taken.
         All peripherals remain at full power. 
@@ -124,7 +83,7 @@ def sleep_until_next_reading():
         display.status(f'Sleeping for {seconds_to_sleep}s')
         time.sleep(seconds_to_sleep)
 
-def deep_sleep_until_next_reading():
+def keep_awake_until_next_reading():
     """ If a display is not connected, enter a deep sleep until the next sensor reading is ready to be taken.
         Used to conserve power between readings. The LAN will be disconnected.
     """
@@ -139,21 +98,15 @@ def deep_sleep_until_next_reading():
             sleep_until_next_reading()
             break
 
-# Two modes - normal, has display attached
-#           - low power, no display upload only
-
-# Get the current time and wait until the next 30 second interval
-# Main Loop
-# while 1
-#   Read all sensor values
-#   Add to readings
-#   Attempt to upload (or when 10 or more readings present if in low power mode) - clear readings if attached
-#   If upload unsuccessful and too many readings, discard oldest
-#   If not low power mode and upload successful, read latest outside values
-#   Update display (if attached)
-#   Read ntp time and update clock
-#   If low power mode - deep sleep until next 30 second interval, else normal sleep
-
+def deep_sleep_until_next_reading():
+    """ Sleep in dormant mode until the next sensor reading is ready to be taken.
+        All peripherals are shut down. 
+    """
+    seconds_to_sleep = get_seconds_until_next_reading()
+    if seconds_to_sleep > 0:
+        display.status(f'Deep sleeping for {seconds_to_sleep}s')
+        connection.disconnect()
+        machine.lightsleep(seconds_to_sleep * 1000)
 
 try:
   
@@ -161,23 +114,26 @@ try:
     display.status('Connecting...')
     prepare()
     # Upload the last error message, if logged
-    upload_last_error()
+    timestream.upload_last_error()
     # Do an initial read and display (if attached)
     display.hide_status()
+    remote_tempC = 0
     current_time, tempC, pres_hPa, humRH = sensor.read_sensor()
-    display.update_readings(ntptime.get_local_time_string(current_time), settings.sensor_location, tempC, pres_hPa, humRH)
     if settings.remote_sensor_location:
-        print(timestream.read_remote_sensor(settings.database_name, settings.sensor_readings_table, settings.remote_sensor_location))
-    deep_sleep_until_next_reading()
+        remote_tempC = timestream.read_remote_sensor(settings.database_name, settings.sensor_readings_table, settings.remote_sensor_location, remote_tempC)
+    display.update_readings(ntptime.get_local_time_string(current_time), settings.sensor_location, tempC, settings.remote_sensor_location, remote_tempC)
+    wait_until_next_reading()
     while(True):
         current_time, tempC, pres_hPa, humRH = sensor.read_sensor()
-        display.update_readings(ntptime.get_local_time_string(current_time), settings.sensor_location, tempC, pres_hPa, humRH)
+        display.update_readings(ntptime.get_local_time_string(current_time), settings.sensor_location, tempC, settings.remote_sensor_location, remote_tempC)
         readings = sensor.format_readings(current_time, tempC, pres_hPa, humRH)
         _readings.extend(readings)
         if connection.connect():
             sync_time()
-            upload_readings(_readings)
-        deep_sleep_until_next_reading()
+            timestream.upload_readings(_readings)
+            if settings.remote_sensor_location:
+                remote_tempC = timestream.read_remote_sensor(settings.database_name, settings.sensor_readings_table, settings.remote_sensor_location, remote_tempC)
+        wait_until_next_reading()
 
 except Exception as e:
     log.write_last_error(e)

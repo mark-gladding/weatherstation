@@ -1,0 +1,6 @@
+{
+    "sensor_location" : "office",
+    "remote_sensor_location" : "outside",
+    "draw_power_period_s" : 15,
+    "deep_sleep" : false
+}

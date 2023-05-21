@@ -1,9 +1,15 @@
 from enhanced_display import Enhanced_Display
 import machine
+from machine import Timer
+import micropython
+import settings
 import time
 
 _led = machine.Pin("LED", machine.Pin.OUT)
 _display = None
+_timer = None
+_readings = []
+_reading_index = 0
 _show_status = True
 
 def init_display():
@@ -78,26 +84,85 @@ def _title(text):
             titleText += c
     return titleText
 
-def update_readings(local_time_string, sensor_location, tempC, pres_hPa, humRH):
-    global _display
+# def update_readings(local_time_string, sensor_location, tempC, pres_hPa, humRH):
+#     global _display
 
-    if not _display:
-        return
+#     if not _display:
+#         return
     
 
-    _display.fill_rect(0, 0, 128, 56, 0)
+#     _display.fill_rect(0, 0, 128, 56, 0)
+
+#     _display.select_font('digits-30')
+#     degrees = '\u00b0'
+#     _display.text(f'{tempC:.1f}{degrees}', 0, 16, 1)
+
+#     _display.select_font('text-16')
+#     _display.text(f'{local_time_string}', 0, 0, 1)
+#     _display.text(f'{_title(sensor_location)}', 0, 0, 1, 2)
+
+#     # _display.text(f'Locn: {sensor_location}', 0, 0)
+#     # _display.text(f'Time: {local_time_string}', 0, 8)
+#     # _display.text(f'Temp: {tempC:.1f}', 0, 16)
+#     # _display.text(f'Pres: {pres_hPa:.0f}', 0, 24)
+#     # _display.text(f'Humi: {humRH:.0f}', 0, 32)
+#     _display.show()
+
+def cycle_display():
+    global _reading_index
+
+    _display.fill(0)
+
+    if len(_readings) == 0:
+        return
+    
+    _reading_index = min(_reading_index, len(_readings) - 1)
+    current_readings = _readings[_reading_index]
+    temperature = current_readings['Temperature']
+    local_time_string = current_readings['Time']
+    sensor_location = current_readings['Location']
 
     _display.select_font('digits-30')
     degrees = '\u00b0'
-    _display.text(f'{tempC:.1f}{degrees}', 0, 16, 1)
+    _display.text(f'{temperature:.1f}{degrees}', 0, 16, 1)
 
     _display.select_font('text-16')
     _display.text(f'{local_time_string}', 0, 0, 1)
     _display.text(f'{_title(sensor_location)}', 0, 0, 1, 2)
 
-    # _display.text(f'Locn: {sensor_location}', 0, 0)
-    # _display.text(f'Time: {local_time_string}', 0, 8)
-    # _display.text(f'Temp: {tempC:.1f}', 0, 16)
-    # _display.text(f'Pres: {pres_hPa:.0f}', 0, 24)
-    # _display.text(f'Humi: {humRH:.0f}', 0, 32)
     _display.show()
+    _reading_index = (_reading_index + 1) % len(_readings)
+
+def scheduled_cycle_display(calback_arg):
+    cycle_display()
+
+def timer_callback(calback_arg):
+    micropython.schedule(scheduled_cycle_display, None)
+
+def update_readings(local_time_string, sensor_location, tempC, remote_location, remote_tempC):
+    global _timer, _readings, _reading_index
+
+    if not _display:
+        return
+    
+    _reading_index = 0
+    _readings = [ 
+        { 'Time' : local_time_string,
+          'Location' : sensor_location,
+          'Temperature' : tempC }
+    ]
+    
+    if remote_location:
+        _readings.append(        
+            { 'Time' : local_time_string,
+              'Location' : remote_location,
+              'Temperature' : remote_tempC })
+        
+        if not _timer:
+            _timer = Timer()
+            _timer.init(mode=Timer.PERIODIC, period=settings.display_cycle_period_ms, callback=timer_callback)
+            cycle_display()
+    else:
+        cycle_display()
+    
+

@@ -1,0 +1,6 @@
+{
+    "sensor_location" : "outside",
+    "remote_sensor_location" : null,
+    "draw_power_period_s" : 0,
+    "deep_sleep" : true
+}
