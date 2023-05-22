@@ -69,3 +69,12 @@ def get_local_time_string(utc_time):
     minutes = tm[4]
 
     return f"{ hours_in_12_hour_format:02d}:{minutes:02d} {'PM' if hours_in_24_hour_format >= 12 else 'AM' }"
+
+_sync_time_count = 0
+def sync_time():
+    global _sync_time_count
+    if _sync_time_count >= settings.sync_time_period:
+        if set_rtc_from_ntp_time():
+            _sync_time_count = 0
+            return
+    _sync_time_count += 1

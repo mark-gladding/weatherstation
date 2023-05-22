@@ -53,21 +53,13 @@ def status(text, flashcount=1):
             flashcount -= 1
         return
     
-    _display.fill_rect(0, 56, 128, 8, 0)
+    _display.fill_rect(0, 56, _display.width, 8, 0)
+    _display.select_font(None)
     _display.text(text, 0, 56)
     _display.show()
 
 def error(text):
     status(text, 2)
-
-def clear():
-    global _display
-
-    if not _display:
-        return
-    
-    _display.fill(0)
-    _display.show()
 
 def _title(text):
     isTitlePos = True
@@ -83,30 +75,6 @@ def _title(text):
                 isTitlePos = True
             titleText += c
     return titleText
-
-# def update_readings(local_time_string, sensor_location, tempC, pres_hPa, humRH):
-#     global _display
-
-#     if not _display:
-#         return
-    
-
-#     _display.fill_rect(0, 0, 128, 56, 0)
-
-#     _display.select_font('digits-30')
-#     degrees = '\u00b0'
-#     _display.text(f'{tempC:.1f}{degrees}', 0, 16, 1)
-
-#     _display.select_font('text-16')
-#     _display.text(f'{local_time_string}', 0, 0, 1)
-#     _display.text(f'{_title(sensor_location)}', 0, 0, 1, 2)
-
-#     # _display.text(f'Locn: {sensor_location}', 0, 0)
-#     # _display.text(f'Time: {local_time_string}', 0, 8)
-#     # _display.text(f'Temp: {tempC:.1f}', 0, 16)
-#     # _display.text(f'Pres: {pres_hPa:.0f}', 0, 24)
-#     # _display.text(f'Humi: {humRH:.0f}', 0, 32)
-#     _display.show()
 
 def cycle_display():
     global _reading_index
