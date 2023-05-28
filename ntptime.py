@@ -40,6 +40,8 @@ def _request_ntp_time(addr=settings.ntp_time_server):
             t = struct.unpack("!I", msg[40:44])[0]
             t -= REF_TIME_1970
             return time.gmtime(t)        
+    except Exception as e:
+        print(f'Failed to read time from {addr}: {str(e)}')
     finally:
         s.close()    
     return None
