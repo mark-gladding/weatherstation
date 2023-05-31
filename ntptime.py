@@ -34,7 +34,7 @@ def _request_ntp_time(addr=settings.ntp_time_server):
     sockaddr = socket.getaddrinfo(addr, 123)[0][-1]
     try:
         s.settimeout(1)
-        res = s.sendto(NTP_QUERY, sockaddr)
+        s.sendto(NTP_QUERY, sockaddr)
         msg = s.recv(48)
         if msg:
             t = struct.unpack("!I", msg[40:44])[0]
