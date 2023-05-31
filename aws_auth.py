@@ -1,3 +1,8 @@
+# Code to sign http requests in order to access AWS services.
+#
+# See https://docs.aws.amazon.com/general/latest/gr/sigv4-signed-request-examples.html
+#
+
 import binascii
 import hmac
 import hashlib
