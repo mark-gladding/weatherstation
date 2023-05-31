@@ -4,7 +4,7 @@
 #
 # MIT License (see the accompanying license file)
 #
-# hhttps://github.com/mark-gladding/weatherstation
+# https://github.com/mark-gladding/weatherstation
 #
 
 import connection
