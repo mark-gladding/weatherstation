@@ -1,6 +1,7 @@
 import time
 import network
 import secrets
+import settings
 
 _wlan = None
 
@@ -13,7 +14,8 @@ def connect():
     if not _wlan.active():
         print('activating connection')
         _wlan.active(True)
-        time.sleep_ms(3000)     # Allow 3 seconds to activate the WiFi radio, etc.
+        if settings.deep_sleep:
+            time.sleep_ms(3000)     # Allow 3 seconds to re-activate the WiFi radio, etc.
     if not _wlan.isconnected():
         print(f'Connecting to "{secrets.wifi_ssid}"')
         _wlan.connect(secrets.wifi_ssid, secrets.wifi_password)
@@ -36,6 +38,7 @@ def disconnect():
     if _wlan.active():
         print('deactivating connection')
         _wlan.active(False)
-        _wlan.deinit()
-        _wlan = None
-        time.sleep_ms(200)
+        if settings.deep_sleep:
+            _wlan.deinit()          # Turn off the WiFi radio.
+            _wlan = None
+            time.sleep_ms(200)
