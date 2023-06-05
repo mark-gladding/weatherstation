@@ -1,0 +1,47 @@
+@startuml
+hide empty description
+
+title Weather Station Network Diagram
+
+!include <awslib14/AWSCommon>
+!include <awslib14/AWSSimplified.puml>
+!include <awslib14/Database/Timestream.puml>
+!include <awslib14/InternetOfThings/IoTThingTemperatureSensor.puml>
+!include <awslib14/InternetOfThings/IoTThingsGraph.puml>
+
+skinparam linetype polyline
+skinparam nodesep 100
+'skinparam ranksep 100
+
+package "Cloud" {
+    Timestream(Timestream, "AWS Timestream", " ")
+    rectangle "<img:grafana.png>\ngrafana" as Grafana
+    rectangle "<img:google-maps.png>\nTime Zone API" as TimeZone
+}
+
+package "Indoor Unit" {
+    IoTThingTemperatureSensor(IndoorSensor, "Temperature Sensor", " ")
+    rectangle "<img:display.png>\nOLED Display" as Display
+}
+
+package "Outdoor Unit" {
+    IoTThingTemperatureSensor(OutdoorSensor, "Temperature Sensor", " ")
+    rectangle "<img:battery.png>\nBattery" as Battery
+}
+
+rectangle "<img:monitor-cellphone-graph.png>\nRemote Display(s)" as RemoteDisplay
+
+
+IndoorSensor -u-> Timestream : Upload readings / error reports
+IndoorSensor -r-> Display : Cycle temperature readings
+TimeZone -d-> IndoorSensor : Get current DST
+Timestream -d-> IndoorSensor  : Download latest outdoor reading
+OutdoorSensor -u-> Timestream : Upload readings / error reports
+TimeZone -d-> OutdoorSensor : Get current DST
+Battery -> OutdoorSensor : Power
+Timestream -r-> Grafana  : Request last 24 hours of data
+Grafana -d-> RemoteDisplay : View graph of last 24 hours
+
+center footer Updated on 05 June 2023
+
+@enduml

@@ -1,5 +1,7 @@
 # Weatherstation
 
+![Temperature comparison in Grafana](images/grafana-temperature-display.png "Temperature comparison in Grafana")
+
 This project was born out of a desire to compare the indoor temperature of my home office with the outside temperature over the course of a 24 hour period. This data would provide a way of evaluating the effectiveness of the insulation used in the construction of the home office. This high level goal led to the following requirements:
 
   * Two separate temperature sensors which can be located independent of each other and not require any physical connection between the two.
@@ -22,3 +24,5 @@ These requirements led to the following design:
   * Periodic cycling (every 5 secods) of the indoor display to alternatively show the indoor temperature and the outdoor temperature.
   * Graphing of the latest 24 hour period of the indoor and outdoor temperature readings using Grafana Cloud. 
   * Catch and upload exceptions to AWS Timestream to aid in debugging of sensor units running in the field without a display or debug port attached.
+
+![Weather Station Network Diagram](images/network-diagram.png "Weather Station Network Diagram")
