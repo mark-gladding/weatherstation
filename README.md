@@ -15,7 +15,6 @@ These requirements led to the following design:
   * Use of a Raspberry Pi Pico W running MicroPython, coupled with a BME280 Atmospheric Sensor.
   * Use of a SSD1306 OLED display for displaying the current indoor and outdoor temperature on the indoor unit.
   * Use of a 2000Ah LiPo battery to power the outdoor sensor.
-  * Use of a 4000Ah Power Bank to power the indoor sensor.
   * Periodic (e.g. every 60 seconds) reading of the sensor and upload to AWS Timestream for storage of time-series data in the cloud.
   * Periodic (e.g. every 60 seconds) download of the latest outdoor sensor reading from AWS Timestream for display on the indoor display.
   * Use of a NTP time server to retrieve the current time and set the Pico's real time clock.
@@ -26,3 +25,39 @@ These requirements led to the following design:
   * Catch and upload exceptions to AWS Timestream to aid in debugging of sensor units running in the field without a display or debug port attached.
 
 ![Weather Station Network Diagram](images/network-diagram.png "Weather Station Network Diagram")
+
+## Connecting to the Internet
+The first thing we need is a means of connecting to and disconnecting from the Internet (or more accurately your WiFi network which in turn provides access to the Internet). This is relatively trivial using the Pico W and MicroPython. MicroPython provides a `network` module which contains a [WLAN](https://docs.micropython.org/en/latest/library/network.WLAN.html) class. To establish a connection you need to:  
+
+  1. Create an instance of the WLAN class.
+  1. Activate the connection. If the WiFi radio has been turned off, wait for it to be activated (e.g. 3 seconds).
+  1. Initiate a connection, supplying your local WiFi _SSID_ and _password_.
+  1. Perodically poll the status of the connection until `isconnected()` returns true.
+
+For this application, being able to disconnect and turn off the WiFi radio is vital when it comes to conserving power when running on battery. To disconnect you need to:  
+
+  1. Disconnect the connection
+  1. Deactivate the connection
+  1. Turn off the WiFi radio (using `deinit()`)
+  1. Release the WLAN class instance.
+
+Code to `connect()` and `disconnect()` can be found in [connection.py](connection.py).
+
+* Time
+   * NTP
+   * Timezone
+* Periodic reading of sensor values
+* Uploading readings to AWS Timestream
+   * HTTPS requests must be signed
+   * Access key and secret access key
+   * Locating the host cell
+* Error handling
+   * Uploading error logs   
+* Downloading remote sensor readings
+* Displaying temperatures on the display
+* Battery Power
+   * Battery type, power banks
+   * Conserving power
+   * Deep sleep mode
+* Enclosures
+* Graphing data

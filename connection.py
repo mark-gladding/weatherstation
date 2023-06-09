@@ -1,11 +1,26 @@
+# Module providing functions to connect/disconnect to/from a wireless LAN.
+# Includes functionality to optionally turn off the WiFi radio on disconnect.
+#
+# Copyright (C) Mark Gladding 2023.
+#
+# MIT License (see the accompanying license file)
+#
+# https://github.com/mark-gladding/weatherstation
+#
+
 import time
 import network
-import secrets
-import settings
+import secrets          # Required for the WiFi SSID and password
+import settings         # Uses the deep_sleep setting to determine if the WiFi radio should be turned off during disconnect.
 
 _wlan = None
 
 def connect():
+    """ Establish a connection to the local WiFi network.
+        Uses secrets.wifi_ssid and secrets.wifi_password when estblishing the connection.
+        Uses settings.deep_sleep to determine if an additional 3 seconds should be allowed for the WiFi radio to be re-activated.
+        Safe to call multiple times - if the connection is already established, it will return immediately.
+    """     
     global _wlan
 
     if not _wlan:
@@ -27,6 +42,10 @@ def connect():
     return _wlan.isconnected()
 
 def disconnect():
+    """ Disconnect from the local WiFi network.
+        Uses settings.deep_sleep to determine if the WiFi radio should be turned off, so the Pico W can be placed in a low power mode.
+        Safe to call multiple times - if there is no connection or its already disconnected, this function will do nothing.
+    """ 
     global _wlan
 
     if _wlan == None:
