@@ -1,6 +1,8 @@
-# Contains secrets that shouldn't be shared.
+# Template for a secrets.py file which contains secrets that shouldn't be shared.
+# WARNING: Do not enter values directly into this file. 
+# Instead copy and rename it to a local secrets.py file and enter your data into that file.
 #
-# WARNING: Do not check this file into a repository without removing your passwords, etc.
+# WARNING: Do not check secrets.py into a repository.
 # secrets.py has been added to .gitignore to help protect you from checking this file in
 # but it's still possible if you do it explicitly.
 #
