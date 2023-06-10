@@ -11,12 +11,12 @@ from connection import Connection
 import display
 import log
 from power import Power
-import ntptime
+from ntptime import NtpTime
 import machine
 from sensor import AtmosphericSensor
 import secrets
 import settings
-import startup
+from startup import Startup
 import timestream
 
 if __name__ == "__main__":
@@ -24,7 +24,10 @@ if __name__ == "__main__":
         connection = Connection(ssid=secrets.wifi_ssid, password=secrets.wifi_password, perform_complete_poweroff=settings.deep_sleep)
         power = Power(connection=connection, sensor_read_period_s=settings.sensor_read_period_s, draw_power_period_s=settings.draw_power_period_s, deep_sleep=settings.deep_sleep)
         sensor = AtmosphericSensor()
-        startup.startup(connection)
+        ntptime = NtpTime(ntp_time_server=settings.ntp_time_server, timezone_api_key=secrets.timezone_api_key, sync_time_period=settings.sync_time_period, timezone_location=settings.timezone_location)
+        startup = Startup(connection=connection, ntptime=ntptime)
+
+        startup.startup()
 
         remote_tempC = 0
         current_time, tempC, pres_hPa, humRH = sensor.read_sensor()
