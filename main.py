@@ -10,7 +10,7 @@
 from connection import Connection
 import display
 import log
-import power
+from power import Power
 import ntptime
 import machine
 import sensor
@@ -22,6 +22,7 @@ import timestream
 if __name__ == "__main__":
     try:
         connection = Connection(ssid=secrets.wifi_ssid, password=secrets.wifi_password, perform_complete_poweroff=settings.deep_sleep)
+        power = Power(connection=connection, sensor_read_period_s=settings.sensor_read_period_s, draw_power_period_s=settings.draw_power_period_s, deep_sleep=settings.deep_sleep)
         startup.startup(connection)
 
         remote_tempC = 0

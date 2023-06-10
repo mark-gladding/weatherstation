@@ -1,5 +1,3 @@
-# Module providing functions to connect/disconnect to/from a wireless LAN.
-# Includes functionality to optionally turn off the WiFi radio on disconnect.
 #
 # Copyright (C) Mark Gladding 2023.
 #
@@ -12,7 +10,18 @@ import time
 import network
 
 class Connection:
-    def __init__(self, ssid, password, perform_complete_poweroff):
+    """Class providing functions to connect/disconnect to/from a wireless LAN.
+
+     Includes functionality to optionally turn off the WiFi radio on disconnect.
+    """    
+    def __init__(self, ssid : str, password : str, perform_complete_poweroff : bool):
+        """Constructor
+
+        Args:
+            ssid (str): WiFi SSID to use when connecting
+            password (str): WiFi password to use when connecting
+            perform_complete_poweroff (bool): If True, disconnect will turn off the WiFi radio and connect will wait additional time for the WiFi radio to turn on.
+        """        
         self._wlan = None
         self._ssid = ssid
         self._password = password
