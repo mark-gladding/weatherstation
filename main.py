@@ -8,8 +8,8 @@
 #
 
 from connection import Connection
-import display
-import log
+from display import Display
+from log import Log
 from power import Power
 from ntptime import NtpTime
 import machine
@@ -21,14 +21,16 @@ from timestream import Timestream
 
 if __name__ == "__main__":
     try:
+        log = Log()
+        display = Display(display_cycle_period_ms=settings.display_cycle_period_ms)
         connection = Connection(ssid=secrets.wifi_ssid, password=secrets.wifi_password, perform_complete_poweroff=settings.deep_sleep)
-        power = Power(connection=connection, sensor_read_period_s=settings.sensor_read_period_s, draw_power_period_s=settings.draw_power_period_s, deep_sleep=settings.deep_sleep)
+        power = Power(display=display, connection=connection, sensor_read_period_s=settings.sensor_read_period_s, draw_power_period_s=settings.draw_power_period_s, deep_sleep=settings.deep_sleep)
         sensor = AtmosphericSensor()
         ntptime = NtpTime(ntp_time_server=settings.ntp_time_server, timezone_api_key=secrets.timezone_api_key, sync_time_period=settings.sync_time_period, timezone_location=settings.timezone_location)
-        timestream = Timestream(aws_access_key=secrets.aws_access_key, aws_secret_access_key=secrets.aws_secret_access_key, aws_region=settings.aws_region,
+        timestream = Timestream(display=display, aws_access_key=secrets.aws_access_key, aws_secret_access_key=secrets.aws_secret_access_key, aws_region=settings.aws_region,
                                 database_name=settings.database_name, sensor_readings_table=settings.sensor_readings_table,
                                 sensor_location=settings.sensor_location, remote_sensor_location=settings.remote_sensor_location, device_log_table=settings.device_log_table)
-        startup = Startup(connection=connection, ntptime=ntptime, timestream=timestream)
+        startup = Startup(display=display, connection=connection, ntptime=ntptime, timestream=timestream, log=log)
 
         startup.startup()
 

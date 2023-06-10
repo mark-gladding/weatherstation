@@ -7,7 +7,6 @@
 # https://github.com/mark-gladding/weatherstation
 #
 
-import display
 import machine
 import time
 
@@ -16,15 +15,17 @@ class Power:
 
      This allows power to be conserved when operating on battery.
     """    
-    def __init__(self, connection, sensor_read_period_s : int, draw_power_period_s : int, deep_sleep : bool):
+    def __init__(self, display, connection, sensor_read_period_s : int, draw_power_period_s : int, deep_sleep : bool):
         """Constructor
 
         Args:
-            connection (_type_): The connection being used.
+            display (Display): The display to output messages to.
+            connection (Connection): The connection being used.
             sensor_read_period_s (int): Period in seconds between sensor reads.
             draw_power_period_s (int): Period in seconds between power draws (0=disable power draws) on a power bank.
             deep_sleep (bool): True to perform a deep sleep between reads, false to keep the unit away between reads.
         """        
+        self._display = display
         self._connection = connection
         self._sensor_read_period_s = sensor_read_period_s
         self._draw_power_period_s = draw_power_period_s
@@ -35,7 +36,7 @@ class Power:
             by turning the WiFi off, on, connecting for a second and turning it back off.
         """
 
-        display.status('Power pulse.')
+        self._display.status('Power pulse.')
         self._connection.disconnect()
         self._connection.connect()
         time.sleep(1)
@@ -71,7 +72,7 @@ class Power:
         """
         seconds_to_sleep = self.get_seconds_until_next_reading()
         if seconds_to_sleep > 0:
-            display.status(f'Sleeping for {seconds_to_sleep}s')
+            self._display.status(f'Sleeping for {seconds_to_sleep}s')
             time.sleep(seconds_to_sleep)
 
     def keep_awake_until_next_reading(self):
@@ -82,7 +83,7 @@ class Power:
             secs_until_next_power_draw = self.get_seconds_until_next_power_draw()
             secs_until_next_reading  = self.get_seconds_until_next_reading()
             if secs_until_next_power_draw != -1 and secs_until_next_power_draw < secs_until_next_reading:
-                display.status(f'Pulse in {secs_until_next_power_draw}s')
+                self._display.status(f'Pulse in {secs_until_next_power_draw}s')
                 time.sleep(secs_until_next_power_draw)
                 self.draw_power()
             else:
@@ -95,6 +96,6 @@ class Power:
         """
         seconds_to_sleep = self.get_seconds_until_next_reading()
         if seconds_to_sleep > 0:
-            display.status(f'Deep sleeping for {seconds_to_sleep}s')
+            self._display.status(f'Deep sleeping for {seconds_to_sleep}s')
             self._connection.disconnect()
             machine.lightsleep(seconds_to_sleep * 1000)

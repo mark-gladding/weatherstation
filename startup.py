@@ -6,26 +6,27 @@
 #
 # https://github.com/mark-gladding/weatherstation
 #
-import display
 import machine
 import time
 
 class Startup:
     """
     """    
-    def __init__(self, connection, ntptime, timestream):
+    def __init__(self, display, connection, ntptime, timestream, log):
+        self._display = display
         self._connection = connection
         self._ntptime = ntptime
         self._timestream = timestream
+        self._log = log
 
     def startup(self):
-        display.init_display()
-        display.status('Connecting...')
+        self._display.init()
+        self._display.status('Connecting...')
         self.connect_and_sync_time()
         # Upload the last error message, if logged
-        self._timestream.upload_last_error()
+        self._timestream.upload_last_error(self._log)
         # Do an initial read and display (if attached)
-        display.hide_status()        
+        self._display.hide_status()        
 
     def connect_and_sync_time(self):
         """ Establish a connection and update the RTC from an NTP server.
@@ -33,7 +34,7 @@ class Startup:
         """ 
         while(True):
             if self._connection.connect():
-                display.status('Connected')
+                self._display.status('Connected')
                 if self._ntptime.set_rtc_from_ntp_time():
                     rtc = machine.RTC()
                     tm = rtc.datetime()

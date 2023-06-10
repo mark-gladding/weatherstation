@@ -8,16 +8,15 @@
 #
 
 import aws_auth
-import display
 import json
-import log
 import urequests
 
 class Timestream:
     """
     """    
-    def __init__(self, aws_access_key : str, aws_secret_access_key : str, aws_region : str, 
+    def __init__(self, display, aws_access_key : str, aws_secret_access_key : str, aws_region : str, 
                  database_name : str, sensor_readings_table : str, sensor_location : str, remote_sensor_location : str, device_log_table : str):
+        self._display = display
         self._aws_access_key = aws_access_key
         self._aws_secret_access_key = aws_secret_access_key
         self._aws_region = aws_region
@@ -51,7 +50,7 @@ class Timestream:
 
     def upload_readings(self, readings):
 
-        display.status(f'Upload {len(readings)} reads.')
+        self._display.status(f'Upload {len(readings)} reads.')
         dimensions = [ {'Name': 'location', 'Value': self._sensor_location} ]
         commonAttributes = {
                 'Dimensions': dimensions,
@@ -62,14 +61,14 @@ class Timestream:
         if response != None:
             try:
                 total = json.loads(response.text)["RecordsIngested"]["Total"]
-                display.status(f'Uploaded {total} of {len(readings)}.')
+                self._display.status(f'Uploaded {total} of {len(readings)}.')
 
                 if total == len(readings):
                     readings.clear()
                     return
             except KeyError:
-                display.error(response.text)
-        display.error("Upload failed.")
+                self._display.error(response.text)
+        self._display.error("Upload failed.")
 
     def read_remote_sensor(self, last_valid_reading):
 
@@ -79,16 +78,16 @@ class Timestream:
                 reading = float(json.loads(response.text)["Rows"][0]["Data"][0]["ScalarValue"])
                 return reading
         except Exception as e:
-            display.error(f'read_remote_sensor failed: {str(e)}')
+            self._display.error(f'read_remote_sensor failed: {str(e)}')
         return last_valid_reading
 
-    def upload_last_error(self):
+    def upload_last_error(self, log):
 
         last_error = log.read_last_error()
         if not last_error:
             return
         
-        display.status(f'Upload log.')
+        self._display.status(f'Upload log.')
         dimensions = [ {'Name': 'location', 'Value': self._sensor_location} ]
         commonAttributes = {
                 'Dimensions': dimensions,
@@ -100,12 +99,12 @@ class Timestream:
             try:
                 total = json.loads(response.text)["RecordsIngested"]["Total"]
                 if total == len(last_error):
-                    display.status(f'Upload successful.')
+                    self._display.status(f'Upload successful.')
                     log.clear_last_error()
                     return
             except KeyError:
-                display.error(response.text)
-        display.error("Upload failed.")        
+                self._display.error(response.text)
+        self._display.error("Upload failed.")        
 
     def send_timestream_request(self, host, command, payload="{}"):
         url = "https://" + host + "/"
@@ -135,7 +134,7 @@ class Timestream:
             if queryHost:
                 return queryHost
         except Exception as e:
-            display.error(f'get_host_cell failed: {str(e)}')
+            self._display.error(f'get_host_cell failed: {str(e)}')
         return None
 
     def query(self, payload):
@@ -144,7 +143,7 @@ class Timestream:
             if queryHost:
                 return self.send_timestream_request(queryHost, "Query", payload )
         except Exception as e:
-            display.error(f'query failed: {str(e)}')
+            self._display.error(f'query failed: {str(e)}')
         return None
 
     def write_records_request(self, payload):
@@ -153,7 +152,7 @@ class Timestream:
             if ingestHost:
                 return self.send_timestream_request(ingestHost, "WriteRecords", payload )
         except Exception as e:
-            display.error(str(e))
+            self._display.error(str(e))
         return None
 
     def write_records(self, databaseName, tableName, records, commonAttributes):

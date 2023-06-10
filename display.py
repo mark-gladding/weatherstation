@@ -1,136 +1,142 @@
+# Display class
+#
+# Copyright (C) Mark Gladding 2023.
+#
+# MIT License (see the accompanying license file)
+#
+# https://github.com/mark-gladding/weatherstation
+#
+
 from enhanced_display import Enhanced_Display
 import machine
 from machine import Timer
 import micropython
-import settings
 import time
 
-_led = machine.Pin("LED", machine.Pin.OUT)
-_display = None
-_timer = None
-_readings = []
-_reading_index = 0
-_show_status = True
+class Display:
+    """
+    """    
+    def __init__(self, display_cycle_period_ms : int):
+        self._display_cycle_period_ms = display_cycle_period_ms
+        self._led = machine.Pin("LED", machine.Pin.OUT)
+        self._display = None
+        self._timer = None
+        self._readings = []
+        self._reading_index = 0
+        self._show_status = True
 
-def init_display():
-    global _display
+    def init(self):
 
-    _display = Enhanced_Display()
-    if not _display.is_present:
-        print('Display not detected.')
-        _display = None
-    else:
-        _display.load_fonts(['digits-30','text-16'])
+        self._display = Enhanced_Display()
 
-def is_present():
-    return _display != None 
-
-def _flash_led():
-    _led.on()
-    time.sleep(.05)
-    _led.off()
-
-def hide_status():
-    global _show_status
-    status('', 0)
-    _show_status = False
-
-def show_status():
-    global _show_status
-    _show_status = True
-
-def status(text, flashcount=1):
-    global _display, _led
-
-    print(text)
-
-    if not _show_status:
-        return
-
-    if not _display:
-        while flashcount > 0:
-            _flash_led()
-            flashcount -= 1
-        return
-    
-    _display.fill_rect(0, 56, _display.width, 8, 0)
-    _display.select_font(None)
-    _display.text(text, 0, 56)
-    _display.show()
-
-def error(text):
-    status(text, 2)
-
-def _title(text):
-    isTitlePos = True
-    base = ord('A')
-    offset = -ord('a')
-    titleText = ''
-    for c in text:
-        if(isTitlePos and c >= 'a' and c <= 'z'):
-            titleText += (chr(ord(c) + offset + base))
-            isTitlePos = False
+        if not self._display.is_present:
+            print('Display not detected.')
+            self._display = None
         else:
-            if c == ' ':
-                isTitlePos = True
-            titleText += c
-    return titleText
+            self._display.load_fonts(['digits-30','text-16'])
 
-def cycle_display():
-    global _reading_index
+    def is_present(self):
+        return self._display != None 
 
-    _display.fill(0)
+    def _flash_led(self):
+        self._led.on()
+        time.sleep(.05)
+        self._led.off()
 
-    if len(_readings) == 0:
-        return
-    
-    _reading_index = min(_reading_index, len(_readings) - 1)
-    current_readings = _readings[_reading_index]
-    temperature = current_readings['Temperature']
-    local_time_string = current_readings['Time']
-    sensor_location = current_readings['Location']
+    def hide_status(self):
+        self.status('', 0)
+        self._show_status = False
 
-    _display.select_font('digits-30')
-    degrees = '\u00b0'
-    _display.text(f'{temperature:.1f}{degrees}', 0, 16, 1)
+    def show_status(self):
+        self._show_status = True
 
-    _display.select_font('text-16')
-    _display.text(f'{local_time_string}', 0, 0, 1)
-    _display.text(f'{_title(sensor_location)}', 0, 0, 1, 2)
+    def status(self, text, flashcount=1):
 
-    _display.show()
-    _reading_index = (_reading_index + 1) % len(_readings)
+        print(text)
 
-def scheduled_cycle_display(calback_arg):
-    cycle_display()
+        if not self._show_status:
+            return
 
-def timer_callback(calback_arg):
-    micropython.schedule(scheduled_cycle_display, None)
-
-def update_readings(local_time_string, sensor_location, tempC, remote_location, remote_tempC):
-    global _timer, _readings, _reading_index
-
-    if not _display:
-        return
-    
-    _reading_index = 0
-    _readings = [ 
-        { 'Time' : local_time_string,
-          'Location' : sensor_location,
-          'Temperature' : tempC }
-    ]
-    
-    if remote_location:
-        _readings.append(        
-            { 'Time' : local_time_string,
-              'Location' : remote_location,
-              'Temperature' : remote_tempC })
+        if not self._display:
+            while flashcount > 0:
+                self._flash_led()
+                flashcount -= 1
+            return
         
-        if not _timer:
-            _timer = Timer()
-            _timer.init(mode=Timer.PERIODIC, period=settings.display_cycle_period_ms, callback=timer_callback)
-            cycle_display()
-    else:
-        cycle_display()
-    
+        self._display.fill_rect(0, 56, self._display.width, 8, 0)
+        self._display.select_font(None)
+        self._display.text(text, 0, 56)
+        self._display.show()
 
+    def error(self, text):
+        self.status(text, 2)
+
+    def _title(self, text):
+        isTitlePos = True
+        base = ord('A')
+        offset = -ord('a')
+        titleText = ''
+        for c in text:
+            if(isTitlePos and c >= 'a' and c <= 'z'):
+                titleText += (chr(ord(c) + offset + base))
+                isTitlePos = False
+            else:
+                if c == ' ':
+                    isTitlePos = True
+                titleText += c
+        return titleText
+
+    def cycle_display(self):
+
+        self._display.fill(0)
+
+        if len(self._readings) == 0:
+            return
+        
+        self._reading_index = min(self._reading_index, len(self._readings) - 1)
+        self.current_readings = self._readings[self._reading_index]
+        temperature = self.current_readings['Temperature']
+        local_time_string = self.current_readings['Time']
+        sensor_location = self.current_readings['Location']
+
+        self._display.select_font('digits-30')
+        degrees = '\u00b0'
+        self._display.text(f'{temperature:.1f}{degrees}', 0, 16, 1)
+
+        self._display.select_font('text-16')
+        self._display.text(f'{local_time_string}', 0, 0, 1)
+        self._display.text(f'{self._title(sensor_location)}', 0, 0, 1, 2)
+
+        self._display.show()
+        self._reading_index = (self._reading_index + 1) % len(self._readings)
+
+    def update_readings(self, local_time_string, sensor_location, tempC, remote_location, remote_tempC):
+        if not self._display:
+            return
+        
+        self._reading_index = 0
+        self._readings = [ 
+            { 'Time' : local_time_string,
+            'Location' : sensor_location,
+            'Temperature' : tempC }
+        ]
+        
+        if remote_location:
+            self._readings.append(        
+                { 'Time' : local_time_string,
+                'Location' : remote_location,
+                'Temperature' : remote_tempC })
+            
+            if not self._timer:
+                self._timer = Timer()
+                self._timer.init(mode=Timer.PERIODIC, period=self._display_cycle_period_ms, callback=self._timer_callback)
+                self.cycle_display()
+        else:
+            self.cycle_display()
+        
+
+    def _timer_callback(self, calback_arg):
+            micropython.schedule(self._scheduled_cycle_display, calback_arg)
+
+    def _scheduled_cycle_display(self, callback_arg):
+        self.cycle_display()
