@@ -10,54 +10,53 @@
 
 import time
 import network
-import secrets          # Required for the WiFi SSID and password
-import settings         # Uses the deep_sleep setting to determine if the WiFi radio should be turned off during disconnect.
 
-_wlan = None
+class Connection:
+    def __init__(self, ssid, password, perform_complete_poweroff):
+        self._wlan = None
+        self._ssid = ssid
+        self._password = password
+        self._perform_complete_poweroff = perform_complete_poweroff
 
-def connect():
-    """ Establish a connection to the local WiFi network.
-        Uses secrets.wifi_ssid and secrets.wifi_password when estblishing the connection.
-        Uses settings.deep_sleep to determine if an additional 3 seconds should be allowed for the WiFi radio to be re-activated.
-        Safe to call multiple times - if the connection is already established, it will return immediately.
-    """     
-    global _wlan
+    def connect(self):
+        """ Establish a connection to the local WiFi network.
+            Uses self._ssid and self._password when estblishing the connection.
+            Uses self._perform_complete_poweroff to determine if an additional 3 seconds should be allowed for the WiFi radio to be re-activated.
+            Safe to call multiple times - if the connection is already established, it will return immediately.
+        """     
+        if not self._wlan:
+            self._wlan = network.WLAN(network.STA_IF)
 
-    if not _wlan:
-        _wlan = network.WLAN(network.STA_IF)
+        if not self._wlan.active():
+            print('activating connection')
+            self._wlan.active(True)
+            if self._perform_complete_poweroff:
+                time.sleep_ms(3000)     # Allow 3 seconds to re-activate the WiFi radio, etc.
+        if not self._wlan.isconnected():
+            print(f'Connecting to "{self._ssid}"')
+            self._wlan.connect(self._ssid, self._password)
+            retries = 0
+            while not self._wlan.isconnected() and self._wlan.status() >= 0 and retries < 20:
+                retries += 1
+                print(f"Retry {retries}")
+                time.sleep_ms(500)      
+        return self._wlan.isconnected()
 
-    if not _wlan.active():
-        print('activating connection')
-        _wlan.active(True)
-        if settings.deep_sleep:
-            time.sleep_ms(3000)     # Allow 3 seconds to re-activate the WiFi radio, etc.
-    if not _wlan.isconnected():
-        print(f'Connecting to "{secrets.wifi_ssid}"')
-        _wlan.connect(secrets.wifi_ssid, secrets.wifi_password)
-        retries = 0
-        while not _wlan.isconnected() and _wlan.status() >= 0 and retries < 20:
-            retries += 1
-            print(f"Retry {retries}")
-            time.sleep_ms(500)      
-    return _wlan.isconnected()
+    def disconnect(self):
+        """ Disconnect from the local WiFi network.
+            Uses self._perform_complete_poweroff to determine if the WiFi radio should be turned off, so the Pico W can be placed in a low power mode.
+            Safe to call multiple times - if there is no connection or its already disconnected, this function will do nothing.
+        """ 
+        if self._wlan == None:
+            return
 
-def disconnect():
-    """ Disconnect from the local WiFi network.
-        Uses settings.deep_sleep to determine if the WiFi radio should be turned off, so the Pico W can be placed in a low power mode.
-        Safe to call multiple times - if there is no connection or its already disconnected, this function will do nothing.
-    """ 
-    global _wlan
-
-    if _wlan == None:
-        return
-
-    if _wlan.isconnected():
-        print('disconnecting connection')
-        _wlan.disconnect()
-    if _wlan.active():
-        print('deactivating connection')
-        _wlan.active(False)
-        if settings.deep_sleep:
-            _wlan.deinit()          # Turn off the WiFi radio.
-            _wlan = None
-            time.sleep_ms(200)
+        if self._wlan.isconnected():
+            print('disconnecting connection')
+            self._wlan.disconnect()
+        if self._wlan.active():
+            print('deactivating connection')
+            self._wlan.active(False)
+            if self._perform_complete_poweroff:
+                self._wlan.deinit()          # Turn off the WiFi radio.
+                self._wlan = None
+                time.sleep_ms(200)

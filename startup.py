@@ -1,11 +1,10 @@
-import connection
 import display
 import machine
 import ntptime
 import time
 import timestream
 
-def connect_and_sync_time():
+def connect_and_sync_time(connection):
     """ Establish a connection and update the RTC from an NTP server.
         Will retry until successful. 
     """ 
@@ -25,10 +24,10 @@ def connect_and_sync_time():
         time.sleep(10)
 
 
-def startup():
+def startup(connection):
     display.init_display()
     display.status('Connecting...')
-    connect_and_sync_time()
+    connect_and_sync_time(connection)
     # Upload the last error message, if logged
     timestream.upload_last_error()
     # Do an initial read and display (if attached)

@@ -7,20 +7,22 @@
 # https://github.com/mark-gladding/weatherstation
 #
 
-import connection
+from connection import Connection
 import display
 import log
 import power
 import ntptime
 import machine
 import sensor
+import secrets
 import settings
 import startup
 import timestream
 
 if __name__ == "__main__":
     try:
-        startup.startup()
+        connection = Connection(ssid=secrets.wifi_ssid, password=secrets.wifi_password, perform_complete_poweroff=settings.deep_sleep)
+        startup.startup(connection)
 
         remote_tempC = 0
         current_time, tempC, pres_hPa, humRH = sensor.read_sensor()
