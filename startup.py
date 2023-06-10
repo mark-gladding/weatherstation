@@ -9,21 +9,21 @@
 import display
 import machine
 import time
-import timestream
 
 class Startup:
     """
     """    
-    def __init__(self, connection, ntptime):
+    def __init__(self, connection, ntptime, timestream):
         self._connection = connection
         self._ntptime = ntptime
+        self._timestream = timestream
 
     def startup(self):
         display.init_display()
         display.status('Connecting...')
         self.connect_and_sync_time()
         # Upload the last error message, if logged
-        timestream.upload_last_error()
+        self._timestream.upload_last_error()
         # Do an initial read and display (if attached)
         display.hide_status()        
 

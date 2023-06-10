@@ -17,7 +17,7 @@ from sensor import AtmosphericSensor
 import secrets
 import settings
 from startup import Startup
-import timestream
+from timestream import Timestream
 
 if __name__ == "__main__":
     try:
@@ -25,7 +25,10 @@ if __name__ == "__main__":
         power = Power(connection=connection, sensor_read_period_s=settings.sensor_read_period_s, draw_power_period_s=settings.draw_power_period_s, deep_sleep=settings.deep_sleep)
         sensor = AtmosphericSensor()
         ntptime = NtpTime(ntp_time_server=settings.ntp_time_server, timezone_api_key=secrets.timezone_api_key, sync_time_period=settings.sync_time_period, timezone_location=settings.timezone_location)
-        startup = Startup(connection=connection, ntptime=ntptime)
+        timestream = Timestream(aws_access_key=secrets.aws_access_key, aws_secret_access_key=secrets.aws_secret_access_key, aws_region=settings.aws_region,
+                                database_name=settings.database_name, sensor_readings_table=settings.sensor_readings_table,
+                                sensor_location=settings.sensor_location, remote_sensor_location=settings.remote_sensor_location, device_log_table=settings.device_log_table)
+        startup = Startup(connection=connection, ntptime=ntptime, timestream=timestream)
 
         startup.startup()
 
