@@ -1,3 +1,12 @@
+# Power class
+#
+# Copyright (C) Mark Gladding 2023.
+#
+# MIT License (see the accompanying license file)
+#
+# https://github.com/mark-gladding/weatherstation
+#
+
 import display
 import machine
 import time

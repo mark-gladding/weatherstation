@@ -79,6 +79,28 @@ def read_remote_sensor_record(databaseName, tableName, sensor_location, last_val
         display.error(f'read_remote_sensor failed: {str(e)}')
     return last_valid_reading
 
+def format_readings(current_time, tempC, pres_hPa, humRH):
+
+    temperature = {
+        'MeasureName': 'temperature',
+        'MeasureValue': f'{tempC}',
+        'Time': current_time
+    }
+
+    pressure = {
+        'MeasureName': 'pressure',
+        'MeasureValue': f'{pres_hPa}',
+        'Time': current_time
+    }
+
+    humidity = {
+        'MeasureName': 'humidity',
+        'MeasureValue': f'{humRH}',
+        'Time': current_time
+    }
+
+    return [temperature, pressure, humidity]
+
 def upload_readings(readings):
 
     display.status(f'Upload {len(readings)} reads.')

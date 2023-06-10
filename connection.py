@@ -1,3 +1,4 @@
+# Connection class
 #
 # Copyright (C) Mark Gladding 2023.
 #

@@ -13,7 +13,7 @@ import log
 from power import Power
 import ntptime
 import machine
-import sensor
+from sensor import AtmosphericSensor
 import secrets
 import settings
 import startup
@@ -23,6 +23,7 @@ if __name__ == "__main__":
     try:
         connection = Connection(ssid=secrets.wifi_ssid, password=secrets.wifi_password, perform_complete_poweroff=settings.deep_sleep)
         power = Power(connection=connection, sensor_read_period_s=settings.sensor_read_period_s, draw_power_period_s=settings.draw_power_period_s, deep_sleep=settings.deep_sleep)
+        sensor = AtmosphericSensor()
         startup.startup(connection)
 
         remote_tempC = 0
@@ -36,7 +37,7 @@ if __name__ == "__main__":
         while(True):
             current_time, tempC, pres_hPa, humRH = sensor.read_sensor()
             display.update_readings(ntptime.get_local_time_string(current_time), settings.sensor_location, tempC, settings.remote_sensor_location, remote_tempC)
-            readings = sensor.format_readings(current_time, tempC, pres_hPa, humRH)
+            readings = timestream.format_readings(current_time, tempC, pres_hPa, humRH)
             readings_to_upload.extend(readings)
             if connection.connect():
                 ntptime.sync_time()
