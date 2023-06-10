@@ -73,10 +73,11 @@ class Timestream:
     def read_remote_sensor(self, last_valid_reading):
 
         try:
-            response = self.read_last_record(self._database_name, self._sensor_readings_table, self._remote_sensor_location, 'temperature')
-            if response:
-                reading = float(json.loads(response.text)["Rows"][0]["Data"][0]["ScalarValue"])
-                return reading
+            if self._remote_sensor_location:    # Only read the remote sensor if it has a valid name
+                response = self.read_last_record(self._database_name, self._sensor_readings_table, self._remote_sensor_location, 'temperature')
+                if response:
+                    reading = float(json.loads(response.text)["Rows"][0]["Data"][0]["ScalarValue"])
+                    return reading
         except Exception as e:
             self._display.error(f'read_remote_sensor failed: {str(e)}')
         return last_valid_reading

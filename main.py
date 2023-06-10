@@ -36,8 +36,8 @@ if __name__ == "__main__":
 
         remote_tempC = 0
         current_time, tempC, pres_hPa, humRH = sensor.read_sensor()
-        if settings.remote_sensor_location:
-            remote_tempC = timestream.read_remote_sensor(remote_tempC)
+        display.update_readings(ntptime.get_local_time_string(current_time), settings.sensor_location, tempC, None, 0)
+        remote_tempC = timestream.read_remote_sensor(remote_tempC)
         display.update_readings(ntptime.get_local_time_string(current_time), settings.sensor_location, tempC, settings.remote_sensor_location, remote_tempC)
         power.wait_until_next_reading()
 
@@ -50,8 +50,7 @@ if __name__ == "__main__":
             if connection.connect():
                 ntptime.sync_time()
                 timestream.upload_readings(readings_to_upload)
-                if settings.remote_sensor_location:
-                    remote_tempC = timestream.read_remote_sensor(remote_tempC)
+                remote_tempC = timestream.read_remote_sensor(remote_tempC)
             power.wait_until_next_reading()
 
     except Exception as e:
