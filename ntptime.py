@@ -19,13 +19,16 @@ class NtpTime:
 
      Includes functionality to optionally turn off the WiFi radio on disconnect.
     """    
-    def __init__(self, ntp_time_server : str, timezone_api_key : str, sync_time_period : int, timezone_location : str):
+    def __init__(self, ntp_time_server : str, timezone_api_key : str, sync_time_period_m : int, timezone_location : str,
+                 day_mode_start_hour : int, night_mode_start_hour : int):
         self._ntp_time_server = ntp_time_server
         self._timezone_api_key = timezone_api_key
-        self._sync_time_period = sync_time_period
+        self._sync_time_period_m = sync_time_period_m
         self._timezone_location = timezone_location
+        self._day_mode_start_hour = day_mode_start_hour
+        self._night_mode_start_hour = night_mode_start_hour
         self._timezone_offset = 0
-        self._sync_time_count = 0
+        self._last_sync_time_s = 0
 
     def set_rtc_from_ntp_time(self):
         tm = self._request_ntp_time()
@@ -34,14 +37,12 @@ class NtpTime:
         machine.RTC().datetime((tm[0], tm[1], tm[2], tm[6] + 1, tm[3], tm[4], tm[5], 0))
 
         self._timezone_offset = self._get_timezone_offset()
+        self._last_sync_time_s = time.time()
         return True        
 
     def sync_time(self):
-        if self._sync_time_count >= self._sync_time_period:
-            if self.set_rtc_from_ntp_time():
-                self._sync_time_count = 0
-                return
-        self._sync_time_count += 1        
+        if time.time() >= self._last_sync_time_s + self._sync_time_period_m * 60:
+            self.set_rtc_from_ntp_time()
 
     def _get_timezone_offset(self):
         response = urequests.get(f'https://maps.googleapis.com/maps/api/timezone/json?location={self._timezone_location}&timestamp={time.time()}&key={self._timezone_api_key}')
@@ -83,11 +84,14 @@ class NtpTime:
         
     def get_timezone_offset(self):
         return self._timezone_offset
+    
+    def get_local_tm(self, utc_time):
+        seconds_since_epoch = (int)(utc_time) + self.get_timezone_offset()
+        return time.gmtime(seconds_since_epoch)
+
 
     def get_local_time_string(self, utc_time):
-
-        seconds_since_epoch = (int)(utc_time) + self.get_timezone_offset()
-        tm = time.gmtime(seconds_since_epoch)
+        tm = self.get_local_tm(utc_time=utc_time)
         hours_in_24_hour_format = tm[3]
         hours_in_12_hour_format = hours_in_24_hour_format % 12
         if hours_in_12_hour_format == 0:
@@ -96,3 +100,7 @@ class NtpTime:
 
         return f"{ hours_in_12_hour_format:02d}:{minutes:02d} {'PM' if hours_in_24_hour_format >= 12 else 'AM' }"
 
+    def is_day(self):
+        tm = self.get_local_tm(time.time())
+        hours_in_24_hour_format = tm[3]
+        return hours_in_24_hour_format >= self._day_mode_start_hour and hours_in_24_hour_format < self._night_mode_start_hour

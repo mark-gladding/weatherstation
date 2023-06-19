@@ -15,7 +15,7 @@ class Power:
 
      This allows power to be conserved when operating on battery.
     """    
-    def __init__(self, display, connection, sensor_read_period_s : int, draw_power_period_s : int, deep_sleep : bool):
+    def __init__(self, display, connection, sensor_read_period_s : int, draw_power_period_s : int):
         """Constructor
 
         Args:
@@ -23,13 +23,11 @@ class Power:
             connection (Connection): The connection being used.
             sensor_read_period_s (int): Period in seconds between sensor reads.
             draw_power_period_s (int): Period in seconds between power draws (0=disable power draws) on a power bank.
-            deep_sleep (bool): True to perform a deep sleep between reads, false to keep the unit away between reads.
         """        
         self._display = display
         self._connection = connection
         self._sensor_read_period_s = sensor_read_period_s
         self._draw_power_period_s = draw_power_period_s
-        self._deep_sleep = deep_sleep
 
     def draw_power(self):
         """ Generate a power draw to keep the attached power bank alive
@@ -57,11 +55,14 @@ class Power:
         current_seconds = time.gmtime()[5]
         return self._draw_power_period_s - (current_seconds % self._draw_power_period_s)
 
-    def wait_until_next_reading(self):
+    def wait_until_next_reading(self, deep_sleep : bool):
         """Either perform a deep sleep to conserve power when running from a battery or
         keep the unit awake until the next reading.
+
+        Args:
+            deep_sleep (bool): True to perform a deep sleep between reads, false to keep the unit away between reads.
         """        
-        if self._deep_sleep:
+        if deep_sleep:
             self.deep_sleep_until_next_reading()
         else:
             self.keep_awake_until_next_reading()

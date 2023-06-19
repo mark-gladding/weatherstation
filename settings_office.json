@@ -2,5 +2,9 @@
     "sensor_location" : "office",
     "remote_sensor_location" : "outside",
     "draw_power_period_s" : 20,
-    "deep_sleep" : false
+    "deep_sleep" : false,
+    "day_upload_period" : 1,
+    "night_upload_period" : 60,
+    "night_mode_start_hour" : 20,
+    "day_mode_start_hour" : 5
 }

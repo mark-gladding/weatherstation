@@ -162,7 +162,7 @@ class Timestream:
         return self.write_records_request(json.dumps(payload))
 
     def read_last_record(self, databaseName, tableName, sensor_location, measurement_name):
-        query_string = f'select MAX_BY(measure_value::double, time) FROM {databaseName}."{tableName}" WHERE measure_name = \'{measurement_name}\' and location=\'{sensor_location}\' and time between ago(1hour) and now()'
+        query_string = f'select MAX_BY(measure_value::double, time) FROM {databaseName}."{tableName}" WHERE measure_name = \'{measurement_name}\' and location=\'{sensor_location}\' and time between ago(30m) and now()'
         payload = { "QueryString" : query_string }
         return self.query(json.dumps(payload))
 

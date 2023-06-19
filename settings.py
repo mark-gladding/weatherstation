@@ -11,11 +11,13 @@ import json
 import os
 import sys
 
+# Common settings
+
 sensor_read_period_s = 60     # Read the sensors every 60 seconds
 
 # Time related settings. Update for your geographic location.
 ntp_time_server = 'au.pool.ntp.org'
-sync_time_period = 30 * 60 / sensor_read_period_s   # Sync the RTC with the ntp time server every 30 minutes
+sync_time_period_m = 30   # Sync the RTC with the ntp time server every 30 minutes
 
 timezone_location = '-37.9707183%2C144.392352'  # Australia / Melbourne
 
@@ -29,7 +31,6 @@ device_log_table = 'DeviceLog'
 display_cycle_period_ms = 5000  # Time to display a reading on the display before moving to the next reading (e.g remote sensor temperature).
 
 reboot_on_error = True      # If true, reboot the Pico on error. If false, just raise the exception (useful during development)
-
 
 # Load the sensor-specific settings from a 'settings_[location].json' file.
 files = os.listdir()
@@ -46,6 +47,5 @@ try:
 
 except OSError:
     sys.exit(f'Cannot load location specific settings file {settings_file}.')
-
 
 
