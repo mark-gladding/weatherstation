@@ -5,6 +5,6 @@
     "deep_sleep" : false,
     "day_upload_period" : 1,
     "night_upload_period" : 60,
-    "night_mode_start_hour" : 20,
+    "night_mode_start_hour" : 23,
     "day_mode_start_hour" : 5
 }

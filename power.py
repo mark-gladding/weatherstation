@@ -7,6 +7,7 @@
 # https://github.com/mark-gladding/weatherstation
 #
 
+import gc
 import machine
 import time
 
@@ -61,7 +62,8 @@ class Power:
 
         Args:
             deep_sleep (bool): True to perform a deep sleep between reads, false to keep the unit away between reads.
-        """        
+        """
+        gc.collect()    # Periodically reclaim RAM
         if deep_sleep:
             self.deep_sleep_until_next_reading()
         else:

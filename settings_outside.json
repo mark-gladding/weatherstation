@@ -4,7 +4,7 @@
     "draw_power_period_s" : 0,
     "deep_sleep" : true,
     "day_upload_period" : 5,
-    "night_upload_period" : 60,
+    "night_upload_period" : 30,
     "night_mode_start_hour" : 22,
     "day_mode_start_hour" : 5
 }

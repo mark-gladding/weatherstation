@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
         readings_to_upload = []
         upload_countdown = settings.day_upload_period if ntptime.is_day() else settings.night_upload_period
-        print(f'upload_countdown: {upload_countdown}')
+
         while(True):
             current_time, tempC, pres_hPa, humRH = sensor.read_sensor()
             display.update_readings(ntptime.get_local_time_string(current_time), settings.sensor_location, tempC, settings.remote_sensor_location, remote_tempC)
