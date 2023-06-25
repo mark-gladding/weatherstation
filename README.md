@@ -62,6 +62,35 @@ For this application, I wanted to have at least two sensors. An indoor sensor wi
 
 Common settings are stored directly in [settings.py](settings.py). Sensor-specific settings are stored in a json file with a filename format `settings_[location].json` where `[location]` varies for each sensor. When the `settings.py` module is imported, it looks in the root filesystem for the first file it finds with a `settings_` prefix. It then loads the sensor-specific settings from this json file. When deploying the code to a specific sensor, I just deploy the appropriate `settings_[location].json` file to the sensor. This allows me to maintain individual settings for each sensor in the git repository.
 
+## Time
+
+When uploading time series data, it's important to have an accurate time source. The Raspberry Pi Pico does not have a battery backed clock. This means the time has to be set every time it's powered on. However this is not a problem for the Pico W which can connect to the internet. [Network Time Protocol (NTP)](https://en.wikipedia.org/wiki/Network_Time_Protocol) has been around as long as the internet. It allows any network connected device to synchronise its time to [Coordinated Universal Time (UTC)](https://en.wikipedia.org/wiki/Coordinated_Universal_Time).  
+The first thing the Weatherstation application does once it's established a connection is to get the current UTC time from an NTP server and set the real time clock. It uses the NTP server specified by `settings.ntp_time_server`. Given time is so critical to this application, it will not continue until it has received a valid time.  
+Once the time has been set, it periodically (i.e. every 30 minutes as specified by `settings.sync_time_period_m`) resynchronises with the NTP time server.
+
+### Local Time
+
+To display the current time adjusted for your local timezone you need to determine your offset from UTC time. This is based on your geographic location and whether daylight savings time is in effect.  
+One option is to hardcode your local timezone offset and daylight savings start and end dates. However daylight savings can vary from year to year and sometimes gets adjusted based on special events (e.g. Sydney Olympics).  
+Rather than try and maintain this information, there are a number of online services which provide the current timezone offset (including daylight savings adjustment). I used the [Google Maps Time Zone API](https://developers.google.com/maps/documentation/timezone/overview) as it is very simple to use (requires a single http request) and is free.  
+
+Time-related functions can be found in [ntptime.py](ntptime.py).
+
+## Periodic Sensor Readings
+
+I am using the [BME280 Atmospheric Sensor](https://core-electronics.com.au/piicodev-atmospheric-sensor-bme280.html) to read temperature, humidity and barometric pressure.  
+
+![BME280 Atmospheric Sensor](images/piicodev-atmospheric-sensor-bme280-with-switch.jpg "BME280 Atmospheric Sensor")  
+
+Currently I'm only using the temperature reading. The Weatherstation application takes a reading every minute on the minute. The reading period is specified in `settings.sensor_read_period_s` and is currently set to 60 seconds. Once the readings have been taken, they are displayed locally (if a display is attached) and uploaded to the cloud.
+
+## Uploading Readings to the Cloud
+
+I selected the [AWS Timestream Database](https://aws.amazon.com/timestream/) to store the sensor readings. This service is specifically designed for storing large quantities of time series data in a very efficient manner. It's probably overkill for the amount of data I need to upload but it is a very simple solution.  
+I elected to upload the data directly using the Timestream API rather than routing MQTT messages through to the Timestream service.  
+Using MicroPython to perform this task required a couple of additional hoops to be jumped through.
+
+  1. 
 
 * Time
    * NTP

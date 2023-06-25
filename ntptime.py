@@ -15,10 +15,11 @@ import time
 import urequests
 
 class NtpTime:
-    """Class providing functions to connect/disconnect to/from a wireless LAN.
+    """Class providing functions to synchronise to UTC time using an NTP server.
 
-     Includes functionality to optionally turn off the WiFi radio on disconnect.
+     Includes functionality to retrieve the local timezone so UTC time can be converted to local time.
     """    
+    
     def __init__(self, ntp_time_server : str, timezone_api_key : str, sync_time_period_m : int, timezone_location : str,
                  day_mode_start_hour : int, night_mode_start_hour : int):
         self._ntp_time_server = ntp_time_server
