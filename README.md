@@ -177,9 +177,11 @@ To graph the last 24 hours of data and compare the indoor temperature of my offi
 
 ## Future Enhancements
 
-I'm pretty happy with the results of this project but there are a couple of future enhancements I'd like to complete.  
+I'm pretty happy with the results of this project but there are a few future enhancements I'd like to complete.  
 
   1. Complete an enclosure for the indoor temperature sensor.
+  1. Calculate and display some more temperature statistics such as daily, weekly, monthly minimum, average and maximum temperatures.
   1. Support over the air software updates. At the moment with only two sensors this is not a major inconvenience. However if I want to add more sensors in different rooms in the house, it would be nice to be able to deploy software updates via the cloud.
+
 
 
